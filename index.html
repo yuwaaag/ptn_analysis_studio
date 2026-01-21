@@ -2,36 +2,36 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <title>PTN AI NEWS - Deep Analysis Mode</title>
+    <title>PTN AI NEWS - FINAL STABLE</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; color: white; }
         .studio { position: relative; width: 100vw; height: 100vh; background: url('studio.jpg') center/cover no-repeat; }
-        .visual-box { position: absolute; right: 5%; top: 12%; width: 42%; height: 40%; border: 4px solid #00f2ff; border-radius: 12px; overflow: hidden; background:#000; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px #00f2ff; }
-        #newsImg { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.8s ease-in-out; }
+        .visual-box { position: absolute; right: 5%; top: 12%; width: 42%; height: 40%; border: 4px solid #00f2ff; border-radius: 12px; overflow: hidden; background:#000; }
+        #newsImg { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.8s; }
         .script-box { position: absolute; left: 3%; top: 12%; width: 45%; height: 60%; background: rgba(0,0,0,0.85); border-left: 10px solid #f00; padding: 30px; overflow: hidden; }
-        #teleprompter { position: relative; font-size: 34px; line-height: 1.8; font-weight: bold; top: 0; transition: top 0.5s ease-out; }
+        #teleprompter { position: relative; font-size: 32px; line-height: 1.6; font-weight: bold; top: 0; transition: top 0.3s linear; text-align: justify; }
         .anchor-container { position: absolute; right: 0; bottom: 0; width: 65%; height: 100%; display: flex; justify-content: flex-end; align-items: flex-end; pointer-events: none; }
         #anchorCanvas { max-width: 100%; max-height: 100%; }
         #anchorVid { display: none; }
         .ticker-bar { position: absolute; bottom: 0; width: 100%; height: 85px; background: linear-gradient(90deg, #b00, #500); display: flex; align-items: center; border-top: 4px solid #fff; }
-        marquee { font-size: 40px; font-weight: bold; }
+        marquee { font-size: 38px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="studio">
         <div class="visual-box"><img id="newsImg" src=""></div>
-        <div class="script-box"><div id="teleprompter">Deep Analysis Shuru Karne Ke Liye Click Karein...</div></div>
+        <div class="script-box"><div id="teleprompter">लोकल डेटा लोड हो रहा है... क्लिक करें</div></div>
         <div class="anchor-container"><canvas id="anchorCanvas"></canvas></div>
         <video id="anchorVid" muted loop crossorigin="anonymous"><source src="anchor_video.mp4" type="video/mp4"></video>
         <div class="ticker-bar"><marquee id="flashTicker">PTN AI NEWS LIVE...</marquee></div>
     </div>
+
 <script>
+    // 1. APNE LINKS YAHAN BADLEIN
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ32Wtpo9D33k3Mr3A74sRy9ep9YRL_LOQuQG4aQ01-mqpNBdiQORzXDlEms7wAzsW1AfopxqK3ony5/pub?gid=0&single=true&output=csv";
-    const proxyUrl = "https://script.google.com/macros/s/AKfycbyVnRsHy0CFForoOSlRV0pknPJ1lah0WauiMeIbfaymi-pDkTsZ6yr1LUG6YE8PJwDO/exec"; 
+    const proxyUrl = "https://script.google.com/macros/s/AKfycbymMmSLAUSJIr3K9P_0gC229QHisYEKt2X1tltr56wFlkfmz37RywVbBJ-q5K6lmSK7/exec";
 
-    let newsItems = [], newsIndex = 0;
-    let imageInterval;
-
+    let newsItems = [], newsIndex = 0, imageInterval;
     const video = document.getElementById("anchorVid"), canvas = document.getElementById("anchorCanvas"), ctx = canvas.getContext("2d");
 
     function processChroma() {
@@ -45,7 +45,6 @@
         requestAnimationFrame(processChroma);
     }
 
-    // SLIDESHOW LOGIC: Ek mudde par kayi photos
     async function startSlideshow(kw) {
         const img = document.getElementById("newsImg");
         clearInterval(imageInterval);
@@ -53,29 +52,42 @@
             const r = await fetch(`${proxyUrl}?kw=${encodeURIComponent(kw)}`);
             const d = await r.json();
             if(d.urls && d.urls.length > 0) {
-                let idx = 0;
-                img.src = d.urls[idx];
+                let idx = 0; img.src = d.urls[idx];
                 imageInterval = setInterval(() => {
                     idx = (idx + 1) % d.urls.length;
-                    img.style.opacity = "0.2";
-                    setTimeout(() => {
-                        img.src = d.urls[idx];
-                        img.style.opacity = "1";
-                    }, 800);
-                }, 15000); // Har 15 second mein photo badlegi
+                    img.style.opacity = "0";
+                    setTimeout(() => { img.src = d.urls[idx]; img.style.opacity = "1"; }, 800);
+                }, 10000); 
             }
         } catch(e) { img.src = `https://loremflickr.com/800/450/${kw}`; }
     }
 
+    // 2. UPDATED LOAD DATA FUNCTION (JAD SE FIX)
     async function loadData() {
-        const res = await fetch(csvUrl + "&v=" + Date.now());
-        const data = await res.text();
-        const rows = data.split('\n').filter(r => r.trim() !== "");
-        newsItems = rows.slice(1).map(r => {
-            const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            return { script: (c[0]||"").replace(/"/g,""), visual: (c[1]||"").replace(/"/g,""), flash: (c[2]||"").replace(/"/g,"") };
-        });
-        if(newsItems.length > 0) playNews();
+        try {
+            const res = await fetch(csvUrl + "&v=" + Date.now());
+            const data = await res.text();
+            const rows = data.split('\n').filter(r => r.trim() !== "");
+            
+            newsItems = rows.slice(1).map(r => {
+                // Comma ki jagah ### use kar rahe hain
+                const c = r.split('###'); 
+                if(c.length < 3) return null;
+                return { 
+                    script: c[0].replace(/"/g,"").trim(), 
+                    visual: c[1].replace(/"/g,"").trim(), 
+                    flash: c[2].replace(/"/g,"").trim() 
+                };
+            }).filter(item => item !== null);
+
+            if(newsItems.length > 0) {
+                playNews();
+            } else {
+                alert("शीट में न्यूज़ नहीं मिली। कृपया E1 टिक करें।");
+            }
+        } catch (err) {
+            console.error("Data Load Error:", err);
+        }
     }
 
     function playNews() {
@@ -83,39 +95,45 @@
         const item = newsItems[newsIndex];
         const prompter = document.getElementById("teleprompter");
         
-        prompter.style.top = "0px"; 
+        prompter.style.top = "0px";
         prompter.innerText = item.script;
         document.getElementById("flashTicker").innerText = item.flash;
-        
-        startSlideshow(item.visual); // Slideshow shuru karein
+        startSlideshow(item.visual);
 
         window.speechSynthesis.cancel();
         const msg = new SpeechSynthesisUtterance(item.script);
         msg.lang = 'hi-IN';
-        msg.rate = 0.85; 
+        msg.rate = 0.85; // Thoda dheere bolne se logic sahi lagta hai
 
+        // एंकर को रुकने से बचाने का कोड
+        msg.onpause = () => { window.speechSynthesis.resume(); };
+        
         msg.onboundary = (event) => {
             if (event.name === 'word') {
                 const percentage = event.charIndex / item.script.length;
-                prompter.style.top = `-${percentage * 600}px`; // Deep analysis ke liye scroll height badha di
+                prompter.style.top = `-${percentage * (prompter.scrollHeight - 200)}px`;
             }
         };
 
-        msg.onstart = () => {
-            video.play();
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            processChroma();
+        msg.onstart = () => { 
+            video.play(); 
+            canvas.width = video.videoWidth; 
+            canvas.height = video.videoHeight; 
+            processChroma(); 
         };
 
-        msg.onend = () => {
-            video.pause();
-            clearInterval(imageInterval);
-            newsIndex++;
-            setTimeout(playNews, 2000);
+        msg.onend = () => { 
+            video.pause(); 
+            newsIndex++; 
+            setTimeout(playNews, 2000); 
         };
+
         window.speechSynthesis.speak(msg);
     }
-    window.onclick = () => { if(newsItems.length === 0) loadData(); };
+
+    window.onclick = () => { 
+        if(newsItems.length === 0) loadData(); 
+    };
 </script>
 </body>
 </html>
